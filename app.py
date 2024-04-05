@@ -65,7 +65,7 @@ if prompt := st.chat_input("ここに入力してください"):
         response = st.session_state["chat_session"].send_message(
             prompt, 
             stream=True, 
-            timeout=300  # timeoutをNoneに設定し、無制限にする
+            timeout=None  # timeoutをNoneに設定し、無制限にする
         )
 
         # Genimi Proのレスポンスを表示（ストリーミング）

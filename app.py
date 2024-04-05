@@ -128,5 +128,5 @@ if __name__ == "__main__":
         # 正常終了時のレスポンスを返す
         return "OK", 200
 
-    port = int(os.environ.get("PORT", 8081))
+    port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)

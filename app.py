@@ -13,9 +13,8 @@ genai.configure(api_key=api_key)
 st.set_page_config(
     page_title="Chat with Gemini 1.5Pro",
     page_icon="🤖",
-    layout="wide"  # レスポンシブデザインのためのレイアウト設定
+    layout="wide" # レスポンシブデザインのためのレイアウト設定
 )
-
 st.title("🤖 Chat with Gemini 1.5Pro")
 
 # セーフティ設定
@@ -61,16 +60,21 @@ if prompt := st.chat_input("ここに入力してください"):
     # ユーザの入力をチャット履歴に追加する
     st.session_state["chat_history"].append({"role": "user", "content": prompt})
 
-    # Genimi Proにメッセージ送信（ストリーミング）
-    response = st.session_state["chat_session"].send_message(prompt, stream=True)
+    try:
+        # Genimi Proにメッセージ送信（ストリーミング）
+        response = st.session_state["chat_session"].send_message(
+            prompt, 
+            stream=True, 
+            timeout=300  # timeoutをNoneに設定し、無制限にする
+        )
 
-    # Genimi Proのレスポンスを表示（ストリーミング）
-    with st.chat_message("assistant"):
-        response_text_placeholder = st.empty()
-        full_response_text = ""
-        for chunk in response:
-            full_response_text += chunk.text
-            response_text_placeholder.markdown(full_response_text)
+        # Genimi Proのレスポンスを表示（ストリーミング）
+        with st.chat_message("assistant"):
+            response_text_placeholder = st.empty()
+            full_response_text = ""
+            for chunk in response:
+                full_response_text += chunk.text
+                response_text_placeholder.markdown(full_response_text)
 
         # 最終的なレスポンステキストを表示
         response_text_placeholder.markdown(full_response_text)
@@ -78,10 +82,13 @@ if prompt := st.chat_input("ここに入力してください"):
         # Genimi Proのレスポンスをチャット履歴に追加する
         st.session_state["chat_history"].append({"role": "assistant", "content": full_response_text})
 
+    except Exception as e:
+        # エラーをキャッチし、エラーメッセージを表示
+        st.error(f"エラーが発生しました: {str(e)}")
+
 if __name__ == "__main__":
     from streamlit.web.cli import main
     from flask import Flask
-
     app = Flask(__name__)
 
     @app.route("/")
@@ -95,7 +102,6 @@ if __name__ == "__main__":
         except Exception as e:
             # その他の例外が発生した場合のエラーハンドリング
             return str(e), 500
-
         # 正常終了時のレスポンスを返す
         return 'OK', 200
 

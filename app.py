@@ -3,88 +3,89 @@ import streamlit as st
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
 
-# APIキーを環境変数から読み込む
+# API キーの読み込み
 api_key = os.environ.get("GENERATIVEAI_API_KEY")
-
-# APIキー設定
 genai.configure(api_key=api_key)
 
-# タイトルを設定する
+# ページ設定
 st.set_page_config(
     page_title="Chat with Gemini 1.5Pro",
     page_icon="🤖",
-    layout="wide"  # レスポンシブデザインのためのレイアウト設定
+    layout="wide",
 )
-
 st.title("🤖 Chat with Gemini 1.5Pro")
 
-# セーフティ設定
+# 安全設定
 safety_settings = [
-    {
-        "category": "HARM_CATEGORY_HARASSMENT",
-        "threshold": "BLOCK_NONE"
-    },
-    {
-        "category": "HARM_CATEGORY_HATE_SPEECH",
-        "threshold": "BLOCK_NONE"
-    },
-    {
-        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-        "threshold": "BLOCK_NONE"
-    },
-    {
-        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-        "threshold": "BLOCK_NONE"
-    }
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
 ]
 
 # セッション状態の初期化
 if "chat_session" not in st.session_state:
-    model = genai.GenerativeModel('gemini-1.5-pro-latest')
-    st.session_state["chat_session"] = model.start_chat(history=[
-        glm.Content(role="user", parts=[glm.Part(text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。")]),
-        glm.Content(role="model", parts=[glm.Part(text="わかりました。")])
-    ])
+    model = genai.GenerativeModel("gemini-1.5-pro-latest")
+    st.session_state["chat_session"] = model.start_chat(
+        history=[
+            glm.Content(
+                role="user",
+                parts=[glm.Part(text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。")],
+            ),
+            glm.Content(role="model", parts=[glm.Part(text="わかりました。")]),
+        ]
+    )
     st.session_state["chat_history"] = []
 
-# チャット履歴を全て表示
+# チャット履歴の表示
 for message in st.session_state["chat_history"]:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# ユーザー入力送信後処理
+# ユーザー入力の処理
 if prompt := st.chat_input("ここに入力してください"):
-    # ユーザの入力を表示する
+    # ユーザーの入力を表示
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # ユーザの入力をチャット履歴に追加する
+    # ユーザーの入力をチャット履歴に追加
     st.session_state["chat_history"].append({"role": "user", "content": prompt})
 
-    # Genimi Proにメッセージ送信（ストリーミング）
+    # Gemini Pro にメッセージ送信 (ストリーミング)
     try:
-        response = st.session_state["chat_session"].send_message(prompt, stream=True, timeout=380)
-        
-        # Genimi Proのレスポンスを表示（ストリーミング）
+        response = st.session_state["chat_session"].send_message(
+            prompt, stream=True, timeout=380
+        )
+
+        # Gemini Pro のレスポンスを表示 (ストリーミング)
         with st.chat_message("assistant"):
             response_text_placeholder = st.empty()
             full_response_text = ""
-            
+
             for chunk in response:
                 if chunk.text:
                     full_response_text += chunk.text
                     response_text_placeholder.markdown(full_response_text)
-            
-            # 最終的なレスポンステキストを表示
-            response_text_placeholder.markdown(full_response_text)
-            
-            # Genimi Proのレスポンスをチャット履歴に追加する
-            st.session_state["chat_history"].append({"role": "assistant", "content": full_response_text})
-    
+                elif chunk.finish_reason == "safety_ratings":
+                    # 安全性チェックでブロックされた場合
+                    st.warning("只今アクセスが集中しております。しばらくしてから再度お試しください。")
+                    break
+
+            # 最終的なレスポンスを表示
+            if chunk.finish_reason != "safety_ratings":
+                response_text_placeholder.markdown(full_response_text)
+
+            # Gemini Pro のレスポンスをチャット履歴に追加
+            st.session_state["chat_history"].append(
+                {"role": "assistant", "content": full_response_text}
+            )
+
     except Exception as e:
         st.error(f"Error occurred while processing response: {str(e)}")
-        # エラーをチャット履歴に追加する
-        st.session_state["chat_history"].append({"role": "assistant", "content": f"Error: {str(e)}"})
+        # エラーをチャット履歴に追加
+        st.session_state["chat_history"].append(
+            {"role": "assistant", "content": f"Error: {str(e)}"}
+        )
 
 if __name__ == "__main__":
     from streamlit.web.cli import main

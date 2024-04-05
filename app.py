@@ -72,12 +72,11 @@ if prompt := st.chat_input("ここに入力してください"):
                     response_text_placeholder.markdown(full_response_text)
                 elif chunk.finish_reason == "safety_ratings":
                     # 安全性チェックでブロックされた場合
-                    st.warning("只今アクセスが集中しております。しばらくしてから再度お試しください。")
+                    full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
                     break
 
             # 最終的なレスポンスを表示
-            if chunk.finish_reason != "safety_ratings":
-                response_text_placeholder.markdown(full_response_text)
+            response_text_placeholder.markdown(full_response_text)
 
             # Gemini Pro のレスポンスをチャット履歴に追加
             st.session_state["chat_history"].append(
@@ -85,10 +84,9 @@ if prompt := st.chat_input("ここに入力してください"):
             )
 
     except Exception as e:
-        st.error(f"Error occurred while processing response: {str(e)}")
-        # エラーをチャット履歴に追加
+        # エラーメッセージをユーザーフレンドリーに変更
         st.session_state["chat_history"].append(
-            {"role": "assistant", "content": f"Error: {str(e)}"}
+            {"role": "assistant", "content": "エラーが発生しました。もう一度お試しください。"}
         )
 
 if __name__ == "__main__":

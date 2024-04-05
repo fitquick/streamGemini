@@ -2,8 +2,6 @@ import os
 import streamlit as st
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
-import google.cloud.logging
-from google.cloud.logging.resource import Resource
 
 # API キーの読み込み
 api_key = os.environ.get("GENERATIVEAI_API_KEY")

@@ -2,13 +2,12 @@ import os
 import streamlit as st
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
-from grpc import RpcContext
 
 # APIキーを環境変数から読み込む
 api_key = os.environ.get("GENERATIVEAI_API_KEY")
 
-# APIキー設定
-genai.configure(api_key=api_key)
+# APIキー設定とタイムアウトの設定
+genai.configure(api_key=api_key, timeout=600)  # タイムアウトを600秒（10分）に設定
 
 # タイトルを設定する
 st.set_page_config(
@@ -62,14 +61,10 @@ if prompt := st.chat_input("ここに入力してください"):
     st.session_state["chat_history"].append({"role": "user", "content": prompt})
 
     try:
-        # タイムアウトを設定するためのRpcContextを作成
-        rpc_context = RpcContext(timeout=600)  # タイムアウトを600秒（10分）に設定
-
         # Genimi Proにメッセージ送信（ストリーミング）
         response = st.session_state["chat_session"].send_message(
             prompt, 
-            stream=True,
-            rpc_context=rpc_context
+            stream=True
         )
 
         # Genimi Proのレスポンスを表示（ストリーミング）

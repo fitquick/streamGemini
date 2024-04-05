@@ -69,7 +69,7 @@ if prompt := st.chat_input("ここに入力してください"):
        response_text = ""
        for chunk in response:
            response_text += chunk.text
-           st.markdown(response_text)
+           st.write(response_text)
    
    # Genimi Proのレスポンスをチャット履歴に追加する
    st.session_state["chat_history"].append({"role": "assistant", "content": response_text})

@@ -13,6 +13,7 @@ st.set_page_config(
     page_icon="🤖",
     layout="wide",
 )
+
 st.title("🤖 Chat with Gemini 1.5Pro")
 
 # 安全設定
@@ -58,14 +59,13 @@ if prompt := st.chat_input("ここに入力してください"):
     # Gemini Pro にメッセージ送信 (ストリーミング)
     try:
         response = st.session_state["chat_session"].send_message(
-            prompt, stream=True, timeout=480, safety_settings=safety_settings
+            prompt, stream=True, timeout=600, safety_settings=safety_settings
         )
 
         # Gemini Pro のレスポンスを表示 (ストリーミング)
         with st.chat_message("assistant"):
             response_text_placeholder = st.empty()
             full_response_text = ""
-
             for chunk in response:
                 if chunk.text:
                     full_response_text += chunk.text
@@ -78,16 +78,18 @@ if prompt := st.chat_input("ここに入力してください"):
             # 最終的なレスポンスを表示
             response_text_placeholder.markdown(full_response_text)
 
-            # Gemini Pro のレスポンスをチャット履歴に追加
-            st.session_state["chat_history"].append(
-                {"role": "assistant", "content": full_response_text}
-            )
+        # Gemini Pro のレスポンスをチャット履歴に追加
+        st.session_state["chat_history"].append(
+            {"role": "assistant", "content": full_response_text}
+        )
 
     except Exception as e:
         # エラー発生時もユーザーフレンドリーなメッセージを返す
         st.session_state["chat_history"].append(
             {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
         )
+        # エラーの詳細をログに記録する
+        st.error(f"エラーが発生しました: {str(e)}")
 
 if __name__ == "__main__":
     from streamlit.web.cli import main

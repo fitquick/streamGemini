@@ -2,12 +2,16 @@ import os
 import streamlit as st
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
+from google.api_core.gapic_v1.method import DEFAULT
 
 # APIキーを環境変数から読み込む
 api_key = os.environ.get("GENERATIVEAI_API_KEY")
 
 # APIキー設定
 genai.configure(api_key=api_key)
+
+# タイムアウト設定 (例: 60秒)
+DEFAULT.timeout = 300
 
 # タイトルを設定する
 st.set_page_config(
@@ -68,15 +72,19 @@ if prompt := st.chat_input("ここに入力してください"):
     with st.chat_message("assistant"):
         response_text_placeholder = st.empty()
         full_response_text = ""
-        for chunk in response:
-            full_response_text += chunk.text
+        try:
+            for chunk in response:
+                full_response_text += chunk.text
+                response_text_placeholder.markdown(full_response_text)
+
+            # 最終的なレスポンステキストを表示
             response_text_placeholder.markdown(full_response_text)
 
-        # 最終的なレスポンステキストを表示
-        response_text_placeholder.markdown(full_response_text)
+            # Genimi Proのレスポンスをチャット履歴に追加する
+            st.session_state["chat_history"].append({"role": "assistant", "content": full_response_text})
 
-        # Genimi Proのレスポンスをチャット履歴に追加する
-        st.session_state["chat_history"].append({"role": "assistant", "content": full_response_text})
+        except Exception as e:
+            st.error(f"エラーが発生しました: {e}")
 
 if __name__ == "__main__":
     from streamlit.web.cli import main

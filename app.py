@@ -7,10 +7,6 @@ import google.ai.generativelanguage as glm
 api_key = os.environ.get("GENERATIVEAI_API_KEY")
 genai.configure(api_key=api_key)
 
-# ログクライアントの初期化
-logging_client = google.cloud.logging.Client()
-logger = logging_client.logger("gemini-1-5-pro-chat")
-
 # ページ設定
 st.set_page_config(
     page_title="Chat with Gemini 1.5Pro",

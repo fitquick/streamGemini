@@ -90,10 +90,6 @@ if prompt := st.chat_input("ここに入力してください"):
         # エラー発生時のメッセージ
         error_message = "エラーが発生しました。しばらくしてから再度お試しください。"
 
-        # full_response_textが定義されている場合はエラーメッセージに追加
-        if 'full_response_text' in locals():
-            error_message = full_response_text + "\n\n" + error_message
-
         # エラーメッセージをチャット履歴に追加
         st.session_state["chat_history"].append(
             {"role": "assistant", "content": error_message}

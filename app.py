@@ -2,16 +2,12 @@ import os
 import streamlit as st
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
-from google.api_core.gapic_v1.method import DEFAULT
 
 # APIキーを環境変数から読み込む
 api_key = os.environ.get("GENERATIVEAI_API_KEY")
 
 # APIキー設定
 genai.configure(api_key=api_key)
-
-# タイムアウト設定 (例: 60秒)
-DEFAULT.timeout = 600
 
 # タイトルを設定する
 st.set_page_config(
@@ -66,25 +62,29 @@ if prompt := st.chat_input("ここに入力してください"):
     st.session_state["chat_history"].append({"role": "user", "content": prompt})
 
     # Genimi Proにメッセージ送信（ストリーミング）
-    response = st.session_state["chat_session"].send_message(prompt, stream=True)
-
-    # Genimi Proのレスポンスを表示（ストリーミング）
-    with st.chat_message("assistant"):
-        response_text_placeholder = st.empty()
-        full_response_text = ""
-        try:
+    try:
+        response = st.session_state["chat_session"].send_message(prompt, stream=True, timeout=120)
+        
+        # Genimi Proのレスポンスを表示（ストリーミング）
+        with st.chat_message("assistant"):
+            response_text_placeholder = st.empty()
+            full_response_text = ""
+            
             for chunk in response:
-                full_response_text += chunk.text
-                response_text_placeholder.markdown(full_response_text)
-
+                if chunk.text:
+                    full_response_text += chunk.text
+                    response_text_placeholder.markdown(full_response_text)
+            
             # 最終的なレスポンステキストを表示
             response_text_placeholder.markdown(full_response_text)
-
+            
             # Genimi Proのレスポンスをチャット履歴に追加する
             st.session_state["chat_history"].append({"role": "assistant", "content": full_response_text})
-
-        except Exception as e:
-            st.error(f"エラーが発生しました: {e}")
+    
+    except Exception as e:
+        st.error(f"Error occurred while processing response: {str(e)}")
+        # エラーをチャット履歴に追加する
+        st.session_state["chat_history"].append({"role": "assistant", "content": f"Error: {str(e)}"})
 
 if __name__ == "__main__":
     from streamlit.web.cli import main
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         except Exception as e:
             # その他の例外が発生した場合のエラーハンドリング
             return str(e), 500
-
+        
         # 正常終了時のレスポンスを返す
         return 'OK', 200
 

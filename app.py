@@ -13,11 +13,11 @@ genai.configure(api_key=api_key)
 # タイトルを設定する
 st.set_page_config(
     page_title="Chat with Gemini 1.5Pro",
-    page_icon="🐤",
+    page_icon="🤖",
     layout="wide"  # レスポンシブデザインのためのレイアウト設定
 )
 
-st.title("🐤 Chat with Gemini 1.5Pro")
+st.title("🤖 Chat with Gemini 1.5Pro")
 
 # セッション状態の初期化
 if "chat_session" not in st.session_state:

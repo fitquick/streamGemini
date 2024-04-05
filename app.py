@@ -2,9 +2,6 @@ import os
 import streamlit as st
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
-import logging
-
-logger = logging.getLogger(__name__)
 
 # API キーの読み込み
 api_key = os.environ.get("GENERATIVEAI_API_KEY")
@@ -87,15 +84,12 @@ if prompt := st.chat_input("ここに入力してください"):
         )
 
     except Exception as e:
-        # エラー発生時のメッセージ
-        error_message = "エラーが発生しました。しばらくしてから再度お試しください。"
-
-        # エラーメッセージをチャット履歴に追加
+        # エラー発生時もユーザーフレンドリーなメッセージを返す
         st.session_state["chat_history"].append(
-            {"role": "assistant", "content": error_message}
+            {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
         )
         # エラーの詳細をログに記録する
-        logger.error(f"エラーが発生しました: {str(e)}")
+        st.error(f"エラーが発生しました: {str(e)}")
 
 if __name__ == "__main__":
     from streamlit.web.cli import main

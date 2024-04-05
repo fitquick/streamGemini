@@ -84,9 +84,9 @@ if prompt := st.chat_input("ここに入力してください"):
             )
 
     except Exception as e:
-        # エラーメッセージをユーザーフレンドリーに変更
+        # エラー発生時もユーザーフレンドリーなメッセージを返す
         st.session_state["chat_history"].append(
-            {"role": "assistant", "content": "エラーが発生しました。もう一度お試しください。"}
+            {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
         )
 
 if __name__ == "__main__":

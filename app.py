@@ -23,7 +23,7 @@ st.title("🐤 Chat with Gemini 1.5Pro")
 if "chat_session" not in st.session_state:
     model = genai.GenerativeModel('gemini-1.5-pro-latest')
     st.session_state["chat_session"] = model.start_chat(history=[
-        glm.Content(role="user", parts=[glm.Part(text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を引用します。")]),
+        glm.Content(role="user", parts=[glm.Part(text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。")]),
         glm.Content(role="model", parts=[glm.Part(text="わかりました。")])
     ])
     st.session_state["chat_history"] = []

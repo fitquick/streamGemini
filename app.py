@@ -11,7 +11,7 @@ api_key = os.environ.get("GENERATIVEAI_API_KEY")
 genai.configure(api_key=api_key)
 
 # タイムアウト設定 (例: 60秒)
-DEFAULT.timeout = 300
+DEFAULT.timeout = 600
 
 # タイトルを設定する
 st.set_page_config(

@@ -30,7 +30,11 @@ if "chat_session" not in st.session_state:
         history=[
             glm.Content(
                 role="user",
-                parts=[glm.Part(text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。")],
+                parts=[
+                    glm.Part(
+                        text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。"
+                    )
+                ],
             ),
             glm.Content(role="model", parts=[glm.Part(text="わかりました。")]),
         ]
@@ -54,7 +58,7 @@ if prompt := st.chat_input("ここに入力してください"):
     # Gemini Pro にメッセージ送信 (ストリーミング)
     try:
         response = st.session_state["chat_session"].send_message(
-            prompt, stream=True, timeout=380
+            prompt, stream=True, timeout=380, safety_settings=safety_settings
         )
 
         # Gemini Pro のレスポンスを表示 (ストリーミング)
@@ -100,13 +104,13 @@ if __name__ == "__main__":
             main()
         except SystemExit as e:
             if e.code != 0:
-                return 'Error', 500
+                return "Error", 500
         except Exception as e:
             # その他の例外が発生した場合のエラーハンドリング
             return str(e), 500
-        
+
         # 正常終了時のレスポンスを返す
-        return 'OK', 200
+        return "OK", 200
 
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)

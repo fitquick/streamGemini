@@ -87,9 +87,16 @@ if prompt := st.chat_input("ここに入力してください"):
         )
 
     except Exception as e:
-        # エラー発生時も、ストップするまでに生成されたレスポンステキストを返す
+        # エラー発生時のメッセージ
+        error_message = "エラーが発生しました。しばらくしてから再度お試しください。"
+
+        # full_response_textが定義されている場合はエラーメッセージに追加
+        if 'full_response_text' in locals():
+            error_message = full_response_text + "\n\n" + error_message
+
+        # エラーメッセージをチャット履歴に追加
         st.session_state["chat_history"].append(
-            {"role": "assistant", "content": full_response_text}
+            {"role": "assistant", "content": error_message}
         )
         # エラーの詳細をログに記録する
         logger.error(f"エラーが発生しました: {str(e)}")
@@ -111,7 +118,7 @@ if __name__ == "__main__":
         except Exception as e:
             # その他の例外が発生した場合のエラーハンドリング
             return str(e), 500
-        
+
         # 正常終了時のレスポンスを返す
         return "OK", 200
 

@@ -63,7 +63,7 @@ if prompt := st.chat_input("ここに入力してください"):
 
     # Genimi Proにメッセージ送信（ストリーミング）
     try:
-        response = st.session_state["chat_session"].send_message(prompt, stream=True, timeout=180)
+        response = st.session_state["chat_session"].send_message(prompt, stream=True, timeout=380)
         
         # Genimi Proのレスポンスを表示（ストリーミング）
         with st.chat_message("assistant"):

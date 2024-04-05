@@ -61,7 +61,7 @@ if prompt := st.chat_input("ここに入力してください"):
     # Gemini Pro にメッセージ送信 (ストリーミング)
     try:
         response = st.session_state["chat_session"].send_message(
-            prompt, stream=True, 
+            prompt, stream=True, timeout=600, safety_settings=safety_settings
         )
 
         # Gemini Pro のレスポンスを表示 (ストリーミング)

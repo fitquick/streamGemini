@@ -2,10 +2,16 @@ import os
 import streamlit as st
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
+import google.cloud.logging
+from google.cloud.logging.resource import Resource
 
 # API キーの読み込み
 api_key = os.environ.get("GENERATIVEAI_API_KEY")
 genai.configure(api_key=api_key)
+
+# ログクライアントの初期化
+logging_client = google.cloud.logging.Client()
+logger = logging_client.logger("gemini-1-5-pro-chat")
 
 # ページ設定
 st.set_page_config(
@@ -58,10 +64,16 @@ if prompt := st.chat_input("ここに入力してください"):
 
     # Gemini Pro にメッセージ送信 (ストリーミング)
     try:
+        # ログを記録
+        logger.log_text(f"Sending message to Gemini 1.5 Pro: {prompt}", severity="INFO")
+        
         response = st.session_state["chat_session"].send_message(
-            prompt, stream=True, timeout=600, safety_settings=safety_settings
+            prompt, stream=True, timeout=300, safety_settings=safety_settings
         )
-
+        
+        # ログを記録
+        logger.log_text(f"Received response from Gemini 1.5 Pro", severity="INFO")
+        
         # Gemini Pro のレスポンスを表示 (ストリーミング)
         with st.chat_message("assistant"):
             response_text_placeholder = st.empty()
@@ -70,9 +82,12 @@ if prompt := st.chat_input("ここに入力してください"):
                 if chunk.text:
                     full_response_text += chunk.text
                     response_text_placeholder.markdown(full_response_text)
+                    # チャンクをログに記録
+                    logger.log_text(f"Received chunk: {chunk.text}", severity="INFO")
                 elif chunk.finish_reason == "safety_ratings":
                     # 安全性チェックでブロックされた場合
                     full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
+                    logger.log_text(f"Blocked by safety check", severity="WARNING")
                     break
 
             # 最終的なレスポンスを表示
@@ -89,6 +104,7 @@ if prompt := st.chat_input("ここに入力してください"):
             {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
         )
         # エラーの詳細をログに記録する
+        logger.log_text(f"Error occurred: {str(e)}", severity="ERROR")
         st.error(f"エラーが発生しました: {str(e)}")
 
 if __name__ == "__main__":

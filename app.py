@@ -65,12 +65,12 @@ if prompt := st.chat_input("ここに入力してください"):
    response = st.session_state["chat_session"].send_message(prompt, stream=True)
 
    # Genimi Proのレスポンスを表示（ストリーミング）
-with st.chat_message("assistant"):
-    response_text_placeholder = st.empty()
-    full_response_text = ""
-    for chunk in response:
-        full_response_text += chunk.text
-        response_text_placeholder.markdown(full_response_text)
+   with st.chat_message("assistant"):
+       response_text_placeholder = st.empty()
+       full_response_text = ""
+       for chunk in response:
+           full_response_text += chunk.text
+           response_text_placeholder.markdown(full_response_text)
     
     # 最終的なレスポンステキストを表示
     response_text_placeholder.markdown(full_response_text)

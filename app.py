@@ -19,6 +19,26 @@ st.set_page_config(
 
 st.title("🤖 Chat with Gemini 1.5Pro")
 
+# セーフティ設定
+safety_settings = [
+    {
+        "category": "HARM_CATEGORY_HARASSMENT",
+        "threshold": "BLOCK_NONE"
+    },
+    {
+        "category": "HARM_CATEGORY_HATE_SPEECH",
+        "threshold": "BLOCK_NONE"
+    },
+    {
+        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        "threshold": "BLOCK_NONE"
+    },
+    {
+        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+        "threshold": "BLOCK_NONE"
+    }
+]
+
 # セッション状態の初期化
 if "chat_session" not in st.session_state:
     model = genai.GenerativeModel('gemini-1.5-pro-latest')

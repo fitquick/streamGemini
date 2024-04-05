@@ -3,6 +3,7 @@ import streamlit as st
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
 import logging
+
 logger = logging.getLogger(__name__)
 
 # API キーの読み込み
@@ -86,12 +87,12 @@ if prompt := st.chat_input("ここに入力してください"):
         )
 
     except Exception as e:
-        # エラー発生時もユーザーフレンドリーなメッセージを返す
+        # エラー発生時も、ストップするまでに生成されたレスポンステキストを返す
         st.session_state["chat_history"].append(
-            {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
+            {"role": "assistant", "content": full_response_text}
         )
         # エラーの詳細をログに記録する
-        st.error(f"エラーが発生しました: {str(e)}")
+        logger.error(f"エラーが発生しました: {str(e)}")
 
 if __name__ == "__main__":
     from streamlit.web.cli import main
@@ -110,7 +111,7 @@ if __name__ == "__main__":
         except Exception as e:
             # その他の例外が発生した場合のエラーハンドリング
             return str(e), 500
-
+        
         # 正常終了時のレスポンスを返す
         return "OK", 200
 

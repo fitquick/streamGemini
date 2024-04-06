@@ -16,26 +16,14 @@ st.set_page_config(
 # ユーザー情報を GitHub シークレットから読み込む
 users = json.loads(os.environ["STREAMLIT_AUTHENTICATOR_USERS"])
 
-# ユーザー情報を名前、ユーザー名、パスワードに分割
-names = []
-usernames = []
-passwords = []
-
-for user in users:
-    names.append(user.get("name", ""))
-    usernames.append(user.get("username", ""))
-    passwords.append(user.get("password", ""))
-
-# パスワードをハッシュ化
-hashed_passwords = stauth.hasher(passwords).generate()
-
-# 認証オブジェクトを作成
-authenticator = stauth.Authenticate(names, usernames, hashed_passwords,
+authenticator = stauth.Authenticate(
+    users,
     os.environ["STREAMLIT_AUTHENTICATOR_COOKIE_NAME"],
     os.environ["STREAMLIT_AUTHENTICATOR_SIGNATURE_KEY"],
-    cookie_expiry_days=int(os.environ["STREAMLIT_AUTHENTICATOR_EXPIRY_DAYS"]))
+    cookie_expiry_days=int(os.environ["STREAMLIT_AUTHENTICATOR_EXPIRY_DAYS"]),
+    preauthorized=False,
+)
 
-# ログインフォームの作成
 name, authentication_status, username = authenticator.login('Login', 'main')
 
 if authentication_status:
@@ -44,7 +32,7 @@ if authentication_status:
     genai.configure(api_key=api_key)
 
     st.write(f'Welcome *{name}*')
-    
+
     st.title("🤖 Chat with Gemini 1.5Pro")
 
     # 安全設定
@@ -122,15 +110,10 @@ if authentication_status:
             error_details = traceback.format_exc()
             st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
 
-    # ログアウト機能の追加
-    if st.button('Logout'):
-        authenticator.logout('Logout', 'main')
-        st.write("You have been logged out.")
-
-elif authentication_status == False:
+    authenticator.logout("Logout", "sidebar")
+elif authentication_status is False:
     st.error('Username/password is incorrect')
-    
-elif authentication_status == None:
+elif authentication_status is None:
     st.warning('Please enter your username and password')
 
 if __name__ == "__main__":

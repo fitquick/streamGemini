@@ -6,6 +6,13 @@ import google.generativeai as genai
 import google.ai.generativelanguage as glm
 import traceback
 
+# ページ設定
+st.set_page_config(
+    page_title="Chat with Gemini 1.5Pro",
+    page_icon="🤖",
+    layout="wide",
+)
+
 # ユーザー情報を GitHub シークレットから読み込む
 users = json.loads(os.environ["STREAMLIT_AUTHENTICATOR_USERS"])
 
@@ -22,21 +29,14 @@ authenticator = stauth.Authenticate(
     preauthorized=False,
 )
 
-# API キーの読み込み
-api_key = os.environ.get("GENERATIVEAI_API_KEY")
-genai.configure(api_key=api_key)
-
-# ページ設定
-st.set_page_config(
-    page_title="Chat with Gemini 1.5Pro",
-    page_icon="🤖",
-    layout="wide",
-)
-
 # ログインフォームの作成
 name, authentication_status, email = authenticator.login('Login', 'main')
 
 if authentication_status:
+    # API キーの読み込み
+    api_key = os.environ.get("GENERATIVEAI_API_KEY")
+    genai.configure(api_key=api_key)
+
     st.write(f'Welcome *{name}*')
     
     st.title("🤖 Chat with Gemini 1.5Pro")
@@ -117,13 +117,13 @@ if authentication_status:
             st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
 
     # ログアウト機能の追加
-    if st.session_state["authentication_status"]:
-        if st.button('Logout'):
-            authenticator.logout('Logout', 'main')
-            st.write("You have been logged out.")
+    if st.button('Logout'):
+        authenticator.logout('Logout', 'main')
+        st.write("You have been logged out.")
 
 elif authentication_status is False:
     st.error('Email/password is incorrect')
+    
 elif authentication_status is None:
     st.warning('Please enter your email and password')
 

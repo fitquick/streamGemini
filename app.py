@@ -18,10 +18,10 @@ st.title("🤖 Chat with Gemini 1.5Pro")
 
 # 安全設定
 safety_settings = [
-    {"category": glm.HarmCategory.HARM_CATEGORY_HARASSMENT, "threshold": glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE},
-    {"category": glm.HarmCategory.HARM_CATEGORY_HATE_SPEECH, "threshold": glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE},
-    {"category": glm.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, "threshold": glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE},
-    {"category": glm.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, "threshold": glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE},
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_HIGH"},
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_HIGH"},
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_HIGH"},
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_HIGH"},
 ]
 
 # セッション状態の初期化

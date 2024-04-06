@@ -16,8 +16,19 @@ st.set_page_config(
 # ユーザー情報を GitHub シークレットから読み込む
 users = json.loads(os.environ["STREAMLIT_AUTHENTICATOR_USERS"])
 
+# ユーザー情報を streamlit_authenticator の期待する形式に変換
+credentials = {
+    "usernames": {
+        user["email"]: {
+            "name": user["name"],
+            "email": user["email"],
+            "password": user["password"]
+        } for user in users
+    }
+}
+
 authenticator = stauth.Authenticate(
-    users,
+    credentials,
     os.environ["STREAMLIT_AUTHENTICATOR_COOKIE_NAME"],
     os.environ["STREAMLIT_AUTHENTICATOR_SIGNATURE_KEY"],
     cookie_expiry_days=int(os.environ["STREAMLIT_AUTHENTICATOR_EXPIRY_DAYS"]),

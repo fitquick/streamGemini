@@ -39,7 +39,6 @@ if "chat_session" not in st.session_state:
             ),
             glm.Content(role="model", parts=[glm.Part(text="わかりました。")]),
         ],
-        safety_settings=safety_settings,
     )
     st.session_state["chat_history"] = []
 
@@ -60,7 +59,7 @@ if prompt := st.chat_input("ここに入力してください"):
     # Gemini Pro にメッセージ送信 (ストリーミング)
     try:
         response = st.session_state["chat_session"].send_message(
-            prompt, stream=True, 
+            prompt, stream=True, safety_settings=safety_settings
         )
 
         # Gemini Pro のレスポンスを表示 (ストリーミング)

@@ -17,9 +17,14 @@ st.set_page_config(
 users = json.loads(os.environ["STREAMLIT_AUTHENTICATOR_USERS"])
 
 # ユーザー情報を名前、ユーザー名、パスワードに分割
-names = [user["name"] for user in users]
-usernames = [user["username"] for user in users]
-passwords = [user["password"] for user in users]
+names = []
+usernames = []
+passwords = []
+
+for user in users:
+    names.append(user.get("name", ""))
+    usernames.append(user.get("username", ""))
+    passwords.append(user.get("password", ""))
 
 # パスワードをハッシュ化
 hashed_passwords = stauth.Hasher(passwords).generate()

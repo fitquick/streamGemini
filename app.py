@@ -16,21 +16,22 @@ st.set_page_config(
 # ユーザー情報を GitHub シークレットから読み込む
 users = json.loads(os.environ["STREAMLIT_AUTHENTICATOR_USERS"])
 
-# パスワードをハッシュ化
-for user in users:
-    user['password'] = stauth.utils.generate_hashed_password(user['password'])
+# ユーザー情報を名前、ユーザー名、パスワードに分割
+names = [user["name"] for user in users]
+usernames = [user["username"] for user in users]
+passwords = [user["password"] for user in users]
 
-# Authenticator を初期化
-authenticator = stauth.Authenticate(
-    users,
+# パスワードをハッシュ化
+hashed_passwords = stauth.Hasher(passwords).generate()
+
+# 認証オブジェクトを作成
+authenticator = stauth.Authenticate(names, usernames, hashed_passwords,
     os.environ["STREAMLIT_AUTHENTICATOR_COOKIE_NAME"],
     os.environ["STREAMLIT_AUTHENTICATOR_SIGNATURE_KEY"],
-    cookie_expiry_days=int(os.environ["STREAMLIT_AUTHENTICATOR_EXPIRY_DAYS"]),
-    preauthorized=False,
-)
+    cookie_expiry_days=int(os.environ["STREAMLIT_AUTHENTICATOR_EXPIRY_DAYS"]))
 
 # ログインフォームの作成
-name, authentication_status, email = authenticator.login('Login', 'main')
+name, authentication_status, username = authenticator.login('Login', 'main')
 
 if authentication_status:
     # API キーの読み込み
@@ -121,11 +122,11 @@ if authentication_status:
         authenticator.logout('Logout', 'main')
         st.write("You have been logged out.")
 
-elif authentication_status is False:
-    st.error('Email/password is incorrect')
+elif authentication_status == False:
+    st.error('Username/password is incorrect')
     
-elif authentication_status is None:
-    st.warning('Please enter your email and password')
+elif authentication_status == None:
+    st.warning('Please enter your username and password')
 
 if __name__ == "__main__":
     from streamlit.web.cli import main

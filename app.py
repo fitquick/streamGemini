@@ -19,18 +19,22 @@ users = json.loads(os.environ["STREAMLIT_AUTHENTICATOR_USERS"])
 # ユーザー情報を名前、ユーザー名、パスワードに分割
 names = []
 usernames = []
-hashed_passwords = []
+passwords = []
 
 for user in users:
     names.append(user.get("name", ""))
     usernames.append(user.get("username", ""))
-    hashed_passwords.append(stauth.hash_password(user.get("password", "")))
+    passwords.append(user.get("password", ""))
+
+# パスワードをハッシュ化
+hashed_passwords = stauth.hasher(passwords).generate()
 
 # 認証オブジェクトを作成
 authenticator = stauth.Authenticate(names, usernames, hashed_passwords,
     os.environ["STREAMLIT_AUTHENTICATOR_COOKIE_NAME"],
     os.environ["STREAMLIT_AUTHENTICATOR_SIGNATURE_KEY"],
     cookie_expiry_days=int(os.environ["STREAMLIT_AUTHENTICATOR_EXPIRY_DAYS"]))
+
 # ログインフォームの作成
 name, authentication_status, username = authenticator.login('Login', 'main')
 

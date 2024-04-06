@@ -18,10 +18,10 @@ st.title("🤖 Chat with Gemini 1.5Pro")
 
 # 安全設定
 safety_settings = [
-    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+    {"category": glm.HarmCategory.HARM_CATEGORY_HARASSMENT, "threshold": glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE},
+    {"category": glm.HarmCategory.HARM_CATEGORY_HATE_SPEECH, "threshold": glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE},
+    {"category": glm.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, "threshold": glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE},
+    {"category": glm.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, "threshold": glm.HarmBlockThreshold.BLOCK_HIGH_AND_ABOVE},
 ]
 
 # セッション状態の初期化
@@ -38,7 +38,8 @@ if "chat_session" not in st.session_state:
                 ],
             ),
             glm.Content(role="model", parts=[glm.Part(text="わかりました。")]),
-        ]
+        ],
+        safety_settings=safety_settings,
     )
     st.session_state["chat_history"] = []
 

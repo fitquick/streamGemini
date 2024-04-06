@@ -92,25 +92,25 @@ if prompt := st.chat_input("ここに入力してください"):
         st.error(f"エラーが発生しました: {str(e)}")
 
 if __name__ == "__main__":
-    from streamlit.web.cli import main
-    from flask import Flask
+  from streamlit.web.cli import main
+  from flask import Flask
 
-    app = Flask(__name__)
+  app = Flask(__name__)
 
-    @app.route("/")
-    def index():
-        # Streamlitアプリケーションを実行する
-        try:
-            main()
-        except SystemExit as e:
-            if e.code != 0:
-                return "Error", 500
-        except Exception as e:
-            # その他の例外が発生した場合のエラーハンドリング
-            return str(e), 500
+  @app.route("/")
+  def index():
+    # Streamlitアプリケーションを実行する
+    try:
+      main()
+    except SystemExit as e:
+      if e.code != 0:
+        return "Error", 500
+    except Exception as e:
+      # その他の例外が発生した場合のエラーハンドリング
+      return str(e), 500
 
-        # 正常終了時のレスポンスを返す
-        return "OK", 200
+    # 正常終了時のレスポンスを返す
+    return "OK", 200
 
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+  port = int(os.environ.get("PORT", 8080))
+  app.run(host="0.0.0.0", port=port, timeout=600) # タイムアウト設定を追加

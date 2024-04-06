@@ -113,4 +113,4 @@ if __name__ == "__main__":
     return "OK", 200
 
   port = int(os.environ.get("PORT", 8080))
-  app.run(host="0.0.0.0", port=port, timeout=600) # タイムアウト設定を追加
+  app.run(host="0.0.0.0", port=port) 

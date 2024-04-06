@@ -34,7 +34,7 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=int(os.environ["STREAMLIT_AUTHENTICATOR_EXPIRY_DAYS"]),
 )
 
-name, authentication_status, username = authenticator.login('Login', 'main')
+name, authentication_status, username = authenticator.login(fields=None)
 
 if authentication_status:
     # API キーの読み込み

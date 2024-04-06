@@ -18,7 +18,7 @@ users = json.loads(os.environ["STREAMLIT_AUTHENTICATOR_USERS"])
 
 # パスワードをハッシュ化
 for user in users:
-    user['password'] = stauth.Hasher([user['password']]).generate()[0]
+    user['password'] = stauth.utils.generate_hashed_password(user['password'])
 
 # Authenticator を初期化
 authenticator = stauth.Authenticate(

@@ -21,7 +21,6 @@ authenticator = stauth.Authenticate(
     os.environ["STREAMLIT_AUTHENTICATOR_COOKIE_NAME"],
     os.environ["STREAMLIT_AUTHENTICATOR_SIGNATURE_KEY"],
     cookie_expiry_days=int(os.environ["STREAMLIT_AUTHENTICATOR_EXPIRY_DAYS"]),
-    preauthorized=False,
 )
 
 name, authentication_status, username = authenticator.login('Login', 'main')

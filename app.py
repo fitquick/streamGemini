@@ -2,6 +2,7 @@ import os
 import streamlit as st
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
+import traceback
 
 # API キーの読み込み
 api_key = os.environ.get("GENERATIVEAI_API_KEY")
@@ -89,28 +90,29 @@ if prompt := st.chat_input("ここに入力してください"):
             {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
         )
         # エラーの詳細をログに記録する
-        st.error(f"エラーが発生しました: {str(e)}")
+        error_details = traceback.format_exc()
+        st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
 
 if __name__ == "__main__":
-  from streamlit.web.cli import main
-  from flask import Flask
+    from streamlit.web.cli import main
+    from flask import Flask
 
-  app = Flask(__name__)
+    app = Flask(__name__)
 
-  @app.route("/")
-  def index():
-    # Streamlitアプリケーションを実行する
-    try:
-      main()
-    except SystemExit as e:
-      if e.code != 0:
-        return "Error", 500
-    except Exception as e:
-      # その他の例外が発生した場合のエラーハンドリング
-      return str(e), 500
+    @app.route("/")
+    def index():
+        # Streamlitアプリケーションを実行する
+        try:
+            main()
+        except SystemExit as e:
+            if e.code != 0:
+                return "Error", 500
+        except Exception as e:
+            # その他の例外が発生した場合のエラーハンドリング
+            error_details = traceback.format_exc()
+            return f"Error: {str(e)}\n\nError Details:\n{error_details}", 500
+        # 正常終了時のレスポンスを返す
+        return "OK", 200
 
-    # 正常終了時のレスポンスを返す
-    return "OK", 200
-
-  port = int(os.environ.get("PORT", 8080))
-  app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)

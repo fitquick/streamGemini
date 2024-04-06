@@ -1,8 +1,26 @@
 import os
+import json
 import streamlit as st
+import streamlit_authenticator as stauth
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
 import traceback
+
+# ユーザー情報を GitHub シークレットから読み込む
+users = json.loads(os.environ["STREAMLIT_AUTHENTICATOR_USERS"])
+
+# パスワードをハッシュ化
+for user in users:
+    user['password'] = stauth.Hasher([user['password']]).generate()[0]
+
+# Authenticator を初期化
+authenticator = stauth.Authenticate(
+    users,
+    os.environ["STREAMLIT_AUTHENTICATOR_COOKIE_NAME"],
+    os.environ["STREAMLIT_AUTHENTICATOR_SIGNATURE_KEY"],
+    cookie_expiry_days=int(os.environ["STREAMLIT_AUTHENTICATOR_EXPIRY_DAYS"]),
+    preauthorized=False,
+)
 
 # API キーの読み込み
 api_key = os.environ.get("GENERATIVEAI_API_KEY")
@@ -15,83 +33,99 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("🤖 Chat with Gemini 1.5Pro")
+# ログインフォームの作成
+name, authentication_status, email = authenticator.login('Login', 'main')
 
-# 安全設定
-safety_settings = [
-    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH"},
-    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH"},
-    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_ONLY_HIGH"},
-    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH"},
-]
+if authentication_status:
+    st.write(f'Welcome *{name}*')
+    
+    st.title("🤖 Chat with Gemini 1.5Pro")
 
-# セッション状態の初期化
-if "chat_session" not in st.session_state:
-    model = genai.GenerativeModel("gemini-1.5-pro-latest")
-    st.session_state["chat_session"] = model.start_chat(
-        history=[
-            glm.Content(
-                role="user",
-                parts=[
-                    glm.Part(
-                        text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。"
-                    )
-                ],
-            ),
-            glm.Content(role="model", parts=[glm.Part(text="わかりました。")]),
-        ],
-    )
-    st.session_state["chat_history"] = []
+    # 安全設定
+    safety_settings = [
+        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH"},
+        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH"},
+        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_ONLY_HIGH"},
+        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH"},
+    ]
 
-# チャット履歴の表示
-for message in st.session_state["chat_history"]:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# ユーザー入力の処理
-if prompt := st.chat_input("ここに入力してください"):
-    # ユーザーの入力を表示
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    # ユーザーの入力をチャット履歴に追加
-    st.session_state["chat_history"].append({"role": "user", "content": prompt})
-
-    # Gemini Pro にメッセージ送信 (ストリーミング)
-    try:
-        response = st.session_state["chat_session"].send_message(
-            prompt, stream=True, safety_settings=safety_settings
+    # セッション状態の初期化
+    if "chat_session" not in st.session_state:
+        model = genai.GenerativeModel("gemini-1.5-pro-latest")
+        st.session_state["chat_session"] = model.start_chat(
+            history=[
+                glm.Content(
+                    role="user",
+                    parts=[
+                        glm.Part(
+                            text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。"
+                        )
+                    ],
+                ),
+                glm.Content(role="model", parts=[glm.Part(text="わかりました。")]),
+            ],
         )
+        st.session_state["chat_history"] = []
 
-        # Gemini Pro のレスポンスを表示 (ストリーミング)
-        with st.chat_message("assistant"):
-            response_text_placeholder = st.empty()
-            full_response_text = ""
-            for chunk in response:
-                if chunk.text:
-                    full_response_text += chunk.text
-                    response_text_placeholder.markdown(full_response_text)
-                elif chunk.finish_reason == "safety_ratings":
-                    # 安全性チェックでブロックされた場合
-                    full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
-                    break
+    # チャット履歴の表示
+    for message in st.session_state["chat_history"]:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # ユーザー入力の処理
+    if prompt := st.chat_input("ここに入力してください"):
+        # ユーザーの入力を表示
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # ユーザーの入力をチャット履歴に追加  
+        st.session_state["chat_history"].append({"role": "user", "content": prompt})
+
+        # Gemini Pro にメッセージ送信 (ストリーミング)
+        try:
+            response = st.session_state["chat_session"].send_message(
+                prompt, stream=True, safety_settings=safety_settings
+            )
+            # Gemini Pro のレスポンスを表示 (ストリーミング) 
+            with st.chat_message("assistant"):
+                response_text_placeholder = st.empty()
+                full_response_text = ""
+                for chunk in response:
+                    if chunk.text:
+                        full_response_text += chunk.text
+                        response_text_placeholder.markdown(full_response_text)
+                    elif chunk.finish_reason == "safety_ratings":
+                        # 安全性チェックでブロックされた場合
+                        full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
+                        break
 
             # 最終的なレスポンスを表示
             response_text_placeholder.markdown(full_response_text)
 
-        # Gemini Pro のレスポンスをチャット履歴に追加
-        st.session_state["chat_history"].append(
-            {"role": "assistant", "content": full_response_text}
-        )
+            # Gemini Pro のレスポンスをチャット履歴に追加
+            st.session_state["chat_history"].append(
+                {"role": "assistant", "content": full_response_text}
+            )
 
-    except Exception as e:
-        # エラー発生時もユーザーフレンドリーなメッセージを返す
-        st.session_state["chat_history"].append(
-            {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
-        )
-        # エラーの詳細をログに記録する
-        error_details = traceback.format_exc()
-        st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
+        except Exception as e:
+            # エラー発生時もユーザーフレンドリーなメッセージを返す 
+            st.session_state["chat_history"].append(
+                {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
+            )
+            # エラーの詳細をログに記録する
+            error_details = traceback.format_exc()
+            st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
+
+    # ログアウト機能の追加
+    if st.session_state["authentication_status"]:
+        if st.button('Logout'):
+            authenticator.logout('Logout', 'main')
+            st.write("You have been logged out.")
+
+elif authentication_status is False:
+    st.error('Email/password is incorrect')
+elif authentication_status is None:
+    st.warning('Please enter your email and password')
 
 if __name__ == "__main__":
     from streamlit.web.cli import main
@@ -101,7 +135,7 @@ if __name__ == "__main__":
 
     @app.route("/")
     def index():
-        # Streamlitアプリケーションを実行する
+        # Streamlitアプリケーションを実行する 
         try:
             main()
         except SystemExit as e:

@@ -97,7 +97,7 @@ if authentication_status:
             
             # タイムアウト設定 (55秒)
             start_time = time.time()
-            timeout = 55
+            timeout = 45
             
             # Gemini Pro のレスポンスを表示 (ストリーミング) 
             with st.chat_message("assistant"):
@@ -115,6 +115,7 @@ if authentication_status:
 
                     # タイムアウトチェック 
                     if time.time() - start_time > timeout:
+                        response.resolve()
                         break  # ループを中断
                 
                 # 最終的なレスポンスを表示

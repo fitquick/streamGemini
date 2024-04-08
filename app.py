@@ -115,6 +115,7 @@ if authentication_status:
 
                     # タイムアウトチェック 
                     if time.time() - start_time > timeout:
+                        response.resolve()  # レスポンスのイテレーションを完了する
                         break  # ループを中断
                 
                 # 最終的なレスポンスを表示

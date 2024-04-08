@@ -5,6 +5,7 @@ import streamlit_authenticator as stauth
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
 import traceback
+import asyncio
 
 # ページ設定
 st.set_page_config(
@@ -94,16 +95,24 @@ if authentication_status:
             with st.chat_message("assistant"):
                 response_text_placeholder = st.empty()
                 full_response_text = ""
-                for chunk in response:
-                    if chunk.text:
-                        full_response_text += chunk.text
-                        response_text_placeholder.markdown(full_response_text)
-                    elif chunk.finish_reason == "safety_ratings":
-                        # 安全性チェックでブロックされた場合
-                        full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
-                        break
-
-            # 最終的なレスポンスを表示
+                
+                async def process_response():
+                    async for chunk in response:
+                        if chunk.text:
+                            full_response_text += chunk.text
+                            response_text_placeholder.markdown(full_response_text)
+                        elif chunk.finish_reason == "safety_ratings":
+                            # 安全性チェックでブロックされた場合
+                            full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
+                            break
+                
+                try:
+                    await asyncio.wait_for(process_response(), timeout=55)
+                except asyncio.TimeoutError:
+                    # 55秒経過した場合は、その時点までの出力内容を返す
+                    pass
+                
+            # 最終的なレスポンスを表示    
             response_text_placeholder.markdown(full_response_text)
 
             # Gemini Pro のレスポンスをチャット履歴に追加

@@ -56,11 +56,7 @@ async def send_message(prompt):
                         full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
                         break
             
-            try:
-                await asyncio.wait_for(process_response(), timeout=55)
-            except asyncio.TimeoutError:
-                # 55秒経過した場合は、その時点までの出力内容を返す
-                pass
+            await process_response()
             
         # 最終的なレスポンスを表示    
         response_text_placeholder.markdown(full_response_text)
@@ -71,13 +67,12 @@ async def send_message(prompt):
         )
 
     except Exception as e:
-        # エラー発生時もユーザーフレンドリーなメッセージを返す 
-        st.session_state["chat_history"].append(
-            {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
-        )
+        # エラー発生時は適切なメッセージを表示する
+        error_message = "申し訳ありません。エラーが発生しました。しばらくしてから再度お試しください。"
+        st.error(error_message)
         # エラーの詳細をログに記録する
         error_details = traceback.format_exc()
-        st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
+        st.warning(f"エラー詳細: {error_details}")
 
 async def main():
     name, authentication_status, username = authenticator.login(fields=None)
@@ -143,25 +138,4 @@ async def main():
         st.warning('Please enter your username and password')
 
 if __name__ == "__main__":
-    from streamlit.web.cli import main as streamlit_main
-    from flask import Flask
-
-    app = Flask(__name__)
-
-    @app.route("/")
-    def index():
-        # Streamlitアプリケーションを実行する 
-        try:
-            asyncio.run(main())
-        except SystemExit as e:
-            if e.code != 0:
-                return "Error", 500
-        except Exception as e:
-            # その他の例外が発生した場合のエラーハンドリング
-            error_details = traceback.format_exc()
-            return f"Error: {str(e)}\n\nError Details:\n{error_details}", 500
-        # 正常終了時のレスポンスを返す
-        return "OK", 200
-
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    asyncio.run(main())

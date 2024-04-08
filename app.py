@@ -35,113 +35,114 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=int(os.environ["STREAMLIT_AUTHENTICATOR_EXPIRY_DAYS"]),
 )
 
-name, authentication_status, username = authenticator.login(fields=None)
+async def main():
+    name, authentication_status, username = authenticator.login(fields=None)
 
-if authentication_status:
-    # API キーの読み込み
-    api_key = os.environ.get("GENERATIVEAI_API_KEY")
-    genai.configure(api_key=api_key)
+    if authentication_status:
+        # API キーの読み込み
+        api_key = os.environ.get("GENERATIVEAI_API_KEY")
+        genai.configure(api_key=api_key)
 
-    st.write(f'Welcome *{name}*')
+        st.write(f'Welcome *{name}*')
 
-    st.title("🤖 Chat with Gemini 1.5Pro")
+        st.title("🤖 Chat with Gemini 1.5Pro")
 
-    # 安全設定
-    safety_settings = [
-        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH"},
-        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH"},
-        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_ONLY_HIGH"},
-        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH"},
-    ]
+        # 安全設定
+        safety_settings = [
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_ONLY_HIGH"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH"},
+        ]
 
-    # セッション状態の初期化
-    if "chat_session" not in st.session_state:
-        model = genai.GenerativeModel("gemini-1.5-pro-latest")
-        st.session_state["chat_session"] = model.start_chat(
-            history=[
-                glm.Content(
-                    role="user",
-                    parts=[
-                        glm.Part(
-                            text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。"
-                        )
-                    ],
-                ),
-                glm.Content(role="model", parts=[glm.Part(text="わかりました。")]),
-            ],
-        )
-        st.session_state["chat_history"] = []
-
-    # チャット履歴の表示
-    for message in st.session_state["chat_history"]:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    async def send_message(prompt):
-        # Gemini Pro にメッセージ送信 (ストリーミング)
-        try:
-            response = st.session_state["chat_session"].send_message(
-                prompt, stream=True, safety_settings=safety_settings
+        # セッション状態の初期化
+        if "chat_session" not in st.session_state:
+            model = genai.GenerativeModel("gemini-1.5-pro-latest")
+            st.session_state["chat_session"] = model.start_chat(
+                history=[
+                    glm.Content(
+                        role="user",
+                        parts=[
+                            glm.Part(
+                                text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。"
+                            )
+                        ],
+                    ),
+                    glm.Content(role="model", parts=[glm.Part(text="わかりました。")]),
+                ],
             )
-            # Gemini Pro のレスポンスを表示 (ストリーミング) 
-            with st.chat_message("assistant"):
-                response_text_placeholder = st.empty()
-                full_response_text = ""
-                
-                async def process_response():
-                    async for chunk in response:
-                        if chunk.text:
-                            full_response_text += chunk.text
-                            response_text_placeholder.markdown(full_response_text)
-                        elif chunk.finish_reason == "safety_ratings":
-                            # 安全性チェックでブロックされた場合
-                            full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
-                            break
-                
-                try:
-                    await asyncio.wait_for(process_response(), timeout=55)
-                except asyncio.TimeoutError:
-                    # 55秒経過した場合は、その時点までの出力内容を返す
-                    pass
-                
-            # 最終的なレスポンスを表示    
-            response_text_placeholder.markdown(full_response_text)
+            st.session_state["chat_history"] = []
 
-            # Gemini Pro のレスポンスをチャット履歴に追加
-            st.session_state["chat_history"].append(
-                {"role": "assistant", "content": full_response_text}
-            )
+        # チャット履歴の表示
+        for message in st.session_state["chat_history"]:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-        except Exception as e:
-            # エラー発生時もユーザーフレンドリーなメッセージを返す 
-            st.session_state["chat_history"].append(
-                {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
-            )
-            # エラーの詳細をログに記録する
-            error_details = traceback.format_exc()
-            st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
+        async def send_message(prompt):
+            # Gemini Pro にメッセージ送信 (ストリーミング)
+            try:
+                response = st.session_state["chat_session"].send_message(
+                    prompt, stream=True, safety_settings=safety_settings
+                )
+                # Gemini Pro のレスポンスを表示 (ストリーミング) 
+                with st.chat_message("assistant"):
+                    response_text_placeholder = st.empty()
+                    full_response_text = ""
+                    
+                    async def process_response():
+                        async for chunk in response:
+                            if chunk.text:
+                                full_response_text += chunk.text
+                                response_text_placeholder.markdown(full_response_text)
+                            elif chunk.finish_reason == "safety_ratings":
+                                # 安全性チェックでブロックされた場合
+                                full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
+                                break
+                    
+                    try:
+                        await asyncio.wait_for(process_response(), timeout=55)
+                    except asyncio.TimeoutError:
+                        # 55秒経過した場合は、その時点までの出力内容を返す
+                        pass
+                    
+                # 最終的なレスポンスを表示    
+                response_text_placeholder.markdown(full_response_text)
 
-    # ユーザー入力の処理
-    prompt = st.chat_input("ここに入力してください")
-    if prompt:
-        # ユーザーの入力を表示
-        with st.chat_message("user"):
-            st.markdown(prompt)
+                # Gemini Pro のレスポンスをチャット履歴に追加
+                st.session_state["chat_history"].append(
+                    {"role": "assistant", "content": full_response_text}
+                )
 
-        # ユーザーの入力をチャット履歴に追加  
-        st.session_state["chat_history"].append({"role": "user", "content": prompt})
+            except Exception as e:
+                # エラー発生時もユーザーフレンドリーなメッセージを返す 
+                st.session_state["chat_history"].append(
+                    {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
+                )
+                # エラーの詳細をログに記録する
+                error_details = traceback.format_exc()
+                st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
 
-        # メッセージ送信の非同期処理を実行
-        await send_message(prompt)
+        # ユーザー入力の処理
+        prompt = st.chat_input("ここに入力してください")
+        if prompt:
+            # ユーザーの入力を表示
+            with st.chat_message("user"):
+                st.markdown(prompt)
 
-    authenticator.logout("Logout", "sidebar")
-elif authentication_status is False:
-    st.error('Username/password is incorrect')
-elif authentication_status is None:
-    st.warning('Please enter your username and password')
+            # ユーザーの入力をチャット履歴に追加  
+            st.session_state["chat_history"].append({"role": "user", "content": prompt})
+
+            # メッセージ送信の非同期処理を実行
+            await send_message(prompt)
+
+        authenticator.logout("Logout", "sidebar")
+    elif authentication_status is False:
+        st.error('Username/password is incorrect')
+    elif authentication_status is None:
+        st.warning('Please enter your username and password')
 
 if __name__ == "__main__":
-    from streamlit.web.cli import main
+    from streamlit.web.cli import main as streamlit_main
     from flask import Flask
 
     app = Flask(__name__)
@@ -150,7 +151,7 @@ if __name__ == "__main__":
     def index():
         # Streamlitアプリケーションを実行する 
         try:
-            main()
+            asyncio.run(main())
         except SystemExit as e:
             if e.code != 0:
                 return "Error", 500

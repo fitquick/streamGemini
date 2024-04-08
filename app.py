@@ -90,6 +90,11 @@ if authentication_status:
             response = st.session_state["chat_session"].send_message(
                 prompt, stream=True, safety_settings=safety_settings
             )
+             # タイムアウト設定 (60秒)
+             import time
+             start_time = time.time()
+             timeout = 59
+        
             # Gemini Pro のレスポンスを表示 (ストリーミング) 
             with st.chat_message("assistant"):
                 response_text_placeholder = st.empty()
@@ -102,6 +107,10 @@ if authentication_status:
                         # 安全性チェックでブロックされた場合
                         full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
                         break
+
+                    # タイムアウトチェック & 処理中断
+                    if time.time() - start_time > timeout:
+                        break  # ループを中断 
 
             # 最終的なレスポンスを表示
             response_text_placeholder.markdown(full_response_text)

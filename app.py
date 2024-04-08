@@ -112,22 +112,29 @@ if authentication_status:
                     if time.time() - start_time > timeout:
                         break  # ループを中断 
 
-            # 最終的なレスポンスを表示
-            response_text_placeholder.markdown(full_response_text)
+        # 最終的なレスポンスを表示
+        response_text_placeholder.markdown(full_response_text)
 
-            # Gemini Pro のレスポンスをチャット履歴に追加
-            st.session_state["chat_history"].append(
-                {"role": "assistant", "content": full_response_text}
-            )
+        # Gemini Pro のレスポンスをチャット履歴に追加
+        st.session_state["chat_history"].append(
+            {"role": "assistant", "content": full_response_text}
+        )
 
-        except Exception as e:
-            # エラー発生時もユーザーフレンドリーなメッセージを返す 
-            st.session_state["chat_history"].append(
-                {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
-            )
-            # エラーの詳細をログに記録する
-            error_details = traceback.format_exc()
-            st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
+    except generation_types.BrokenResponseError as e:
+        # ストリーミングレスポンスが中断された場合、最後のレスポンスを履歴に追加
+        st.session_state["chat_history"].append(
+            {"role": "assistant", "content": full_response_text}
+        )
+        last_send, last_received = st.session_state["chat_session"].rewind()
+
+    except Exception as e:
+        # その他のエラー発生時もユーザーフレンドリーなメッセージを返す 
+        st.session_state["chat_history"].append(
+            {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
+        )
+        # エラーの詳細をログに記録する
+        error_details = traceback.format_exc()
+        st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
 
     authenticator.logout("Logout", "sidebar")
 elif authentication_status is False:

@@ -121,6 +121,8 @@ if authentication_status:
             st.session_state["chat_history"].append(
                 {"role": "assistant", "content": full_response_text}
             )
+            # レスポンスの受信を完了する
+            response.resolve()
             
         except generation_types.BrokenResponseError as e:
             # ストリーミングレスポンスが中断された場合、最後のレスポンスを履歴に追加

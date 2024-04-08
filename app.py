@@ -5,6 +5,7 @@ import streamlit_authenticator as stauth
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
 import traceback
+import time
 
 # ページ設定
 st.set_page_config(
@@ -90,10 +91,9 @@ if authentication_status:
             response = st.session_state["chat_session"].send_message(
                 prompt, stream=True, safety_settings=safety_settings
             )
-             # タイムアウト設定 (60秒)
-             import time
-             start_time = time.time()
-             timeout = 59
+            # タイムアウト設定 (60秒)
+            start_time = time.time()
+            timeout = 59
         
             # Gemini Pro のレスポンスを表示 (ストリーミング) 
             with st.chat_message("assistant"):

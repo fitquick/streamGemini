@@ -92,7 +92,7 @@ if authentication_status:
             response = st.session_state["chat_session"].send_message(
                 prompt, stream=True, safety_settings=safety_settings
             )
-            # タイムアウト設定 (59秒)
+            # タイムアウト設定 (60秒)
             start_time = time.time()
             timeout = 59
         
@@ -109,7 +109,7 @@ if authentication_status:
                         full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
                         break
 
-                    # タイムアウトチェック
+                    # タイムアウトチェック & 処理中断
                     if time.time() - start_time > timeout:
                         break  # ループを中断 
 
@@ -122,20 +122,12 @@ if authentication_status:
             )
 
         except generation_types.BrokenResponseError as e:
-            # ストリーミングレスポンスが中断された場合
+            # ストリーミングレスポンスが中断された場合、最後のレスポンスを履歴に追加
             if 'full_response_text' in locals():  # full_response_text が定義済みの場合のみ
-                # 途切れたレスポンスをチャット履歴に追加
                 st.session_state["chat_history"].append(
                     {"role": "assistant", "content": full_response_text}
                 )
-                # 最後の会話をセッションにセット
-                last_send, last_received = st.session_state["chat_session"].rewind()
-                st.session_state["chat_session"] = st.session_state["chat_session"]
-            else:
-                # レスポンスが全く返ってこなかった場合はユーザーフレンドリーなメッセージを返す
-                st.session_state["chat_history"].append(
-                    {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
-                )
+            last_send, last_received = st.session_state["chat_session"].rewind()
 
         except Exception as e:
             # その他のエラー発生時もユーザーフレンドリーなメッセージを返す 

@@ -4,6 +4,7 @@ import streamlit as st
 import streamlit_authenticator as stauth
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
+from google.generativeai.types import generation_types
 import traceback
 import time
 

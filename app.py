@@ -48,17 +48,20 @@ async def send_message(prompt):
 
             async def process_response():
                 nonlocal full_response_text
-                async for chunk in asyncio.timeout(55, response):
-                    if chunk.text:
-                        full_response_text += chunk.text
-                        response_text_placeholder.markdown(full_response_text)
-                    elif chunk.finish_reason == "safety_ratings":
-                        # 安全性チェックでブロックされた場合
-                        full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
-                        break
+                try:
+                    async for chunk in response:
+                        if chunk.text:
+                            full_response_text += chunk.text
+                            response_text_placeholder.markdown(full_response_text)
+                        elif chunk.finish_reason == "safety_ratings":
+                            # 安全性チェックでブロックされた場合
+                            full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
+                            break
+                except:
+                    pass
 
             try:
-                await process_response()
+                await asyncio.wait_for(process_response(), timeout=55)
             except asyncio.TimeoutError:
                 # タイムアウト発生時は、その時点までのレスポンスを返す
                 pass

@@ -95,14 +95,15 @@ if authentication_status:
                 prompt, stream=True, safety_settings=safety_settings
             )
             
-            # タイムアウト設定 (60秒)
+            # タイムアウト設定 (55秒)
             start_time = time.time()
             timeout = 55
-        
+            
             # Gemini Pro のレスポンスを表示 (ストリーミング) 
             with st.chat_message("assistant"):
                 response_text_placeholder = st.empty()
                 full_response_text = ""
+                
                 for chunk in response:
                     if chunk.text:
                         full_response_text += chunk.text
@@ -114,17 +115,16 @@ if authentication_status:
 
                     # タイムアウトチェック 
                     if time.time() - start_time > timeout:
-                        response.resolve()
                         break  # ループを中断
-                        
-            # 最終的なレスポンスを表示
-            response_text_placeholder.markdown(full_response_text)
-            
-            # チャット履歴にレスポンスを追加
-            st.session_state["chat_history"].append(
-                {"role": "assistant", "content": full_response_text}
-            )
-            
+                
+                # 最終的なレスポンスを表示
+                response_text_placeholder.markdown(full_response_text)
+                
+                # チャット履歴にレスポンスを追加
+                st.session_state["chat_history"].append(
+                    {"role": "assistant", "content": full_response_text}
+                )
+                
         except generation_types.BrokenResponseError as e:
             # ストリーミングレスポンスが中断された場合、最後のレスポンスを履歴に追加
             if 'full_response_text' in locals():  

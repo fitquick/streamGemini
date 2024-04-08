@@ -92,7 +92,7 @@ if authentication_status:
             response = st.session_state["chat_session"].send_message(
                 prompt, stream=True, safety_settings=safety_settings
             )
-            # タイムアウト設定 (60秒)
+            # タイムアウト設定 (59秒)
             start_time = time.time()
             timeout = 59
         
@@ -109,7 +109,7 @@ if authentication_status:
                         full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
                         break
 
-                    # タイムアウトチェック & 処理中断
+                    # タイムアウトチェック
                     if time.time() - start_time > timeout:
                         break  # ループを中断 
 

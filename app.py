@@ -45,9 +45,10 @@ async def send_message(prompt):
         with st.chat_message("assistant"):
             response_text_placeholder = st.empty()
             full_response_text = ""
-            
+
             async def process_response():
-                async for chunk in response:
+                nonlocal full_response_text
+                async for chunk in asyncio.timeout(55, response):
                     if chunk.text:
                         full_response_text += chunk.text
                         response_text_placeholder.markdown(full_response_text)
@@ -55,16 +56,20 @@ async def send_message(prompt):
                         # 安全性チェックでブロックされた場合
                         full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
                         break
-            
-            await process_response()
-            
-        # 最終的なレスポンスを表示    
-        response_text_placeholder.markdown(full_response_text)
 
-        # Gemini Pro のレスポンスをチャット履歴に追加
-        st.session_state["chat_history"].append(
-            {"role": "assistant", "content": full_response_text}
-        )
+            try:
+                await process_response()
+            except asyncio.TimeoutError:
+                # タイムアウト発生時は、その時点までのレスポンスを返す
+                pass
+
+            # 最終的なレスポンスを表示    
+            response_text_placeholder.markdown(full_response_text)
+
+            # Gemini Pro のレスポンスをチャット履歴に追加
+            st.session_state["chat_history"].append(
+                {"role": "assistant", "content": full_response_text}
+            )
 
     except Exception as e:
         # エラー発生時は適切なメッセージを表示する

@@ -77,15 +77,7 @@ if authentication_status:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # ユーザー入力の処理
-    if prompt := st.chat_input("ここに入力してください"):
-        # ユーザーの入力を表示
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        # ユーザーの入力をチャット履歴に追加  
-        st.session_state["chat_history"].append({"role": "user", "content": prompt})
-
+    async def send_message(prompt):
         # Gemini Pro にメッセージ送信 (ストリーミング)
         try:
             response = st.session_state["chat_session"].send_message(
@@ -128,6 +120,19 @@ if authentication_status:
             # エラーの詳細をログに記録する
             error_details = traceback.format_exc()
             st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
+
+    # ユーザー入力の処理
+    prompt = st.chat_input("ここに入力してください")
+    if prompt:
+        # ユーザーの入力を表示
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # ユーザーの入力をチャット履歴に追加  
+        st.session_state["chat_history"].append({"role": "user", "content": prompt})
+
+        # メッセージ送信の非同期処理を実行
+        await send_message(prompt)
 
     authenticator.logout("Logout", "sidebar")
 elif authentication_status is False:

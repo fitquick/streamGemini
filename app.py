@@ -115,7 +115,6 @@ if authentication_status:
 
                     # タイムアウトチェック 
                     if time.time() - start_time > timeout:
-                        response.resolve()  # レスポンスのイテレーションを完了する
                         break  # ループを中断
                 
                 # 最終的なレスポンスを表示
@@ -133,6 +132,7 @@ if authentication_status:
                     {"role": "assistant", "content": full_response_text}
                 )
                 
+            # 前回のレスポンスのイテレーションが完了していない場合、巻き戻す
             last_send, last_received = st.session_state["chat_session"].rewind()
 
         except Exception as e:

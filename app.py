@@ -71,6 +71,8 @@ if authentication_status:
                 glm.Content(role="model", parts=[glm.Part(text="わかりました。")]),
             ],
         )
+
+    if "chat_history" not in st.session_state:
         st.session_state["chat_history"] = []
 
     # チャット履歴の表示
@@ -134,9 +136,9 @@ if authentication_status:
             last_send, last_received = st.session_state["chat_session"].rewind()
 
         except Exception as e:
-            # その他のエラー発生時もユーザーフレンドリーなメッセージを返す 
+            # エラー発生時、ユーザーフレンドリーなメッセージを追加
             st.session_state["chat_history"].append(
-                {"role": "assistant", "content": "現在アクセスが集中しております。しばらくしてから再度お試しください。"}
+                {"role": "assistant", "content": "申し訳ありません。エラーが発生しました。しばらくしてから再度お試しください。"}
             )
             # エラーの詳細をログに記録する
             error_details = traceback.format_exc()

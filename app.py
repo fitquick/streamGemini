@@ -57,7 +57,7 @@ if authentication_status:
 
     # セッション状態の初期化
     if "chat_session" not in st.session_state:
-        model = genai.GenerativeModel("gemini-1.5-pro-latest")
+        model = genai.GenerativeModel("gemini-exp-1121")
         st.session_state["chat_session"] = model.start_chat(
             history=[
                 glm.Content(

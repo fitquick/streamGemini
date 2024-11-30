@@ -7,6 +7,7 @@ import google.ai.generativelanguage as glm
 from google.generativeai.types import generation_types
 import traceback
 import time
+from flask import Flask
 
 # ページ設定
 st.set_page_config(
@@ -15,10 +16,18 @@ st.set_page_config(
     layout="wide",
 )
 
-# ユーザー情報を GitHub シークレットから読み込む
+# ユーザー情報を環境変数から読み込む
 users = json.loads(os.environ["STREAMLIT_AUTHENTICATOR_USERS"])
 
-# ユーザー情報を streamlit_authenticator の期待する形式に変換
+# パスワードを抽出してハッシュ化
+passwords = [user["password"] for user in users]
+hashed_passwords = stauth.Hasher(passwords).generate()
+
+# ハッシュ化されたパスワードでユーザー情報を更新
+for i, user in enumerate(users):
+    user["password"] = hashed_passwords[i]
+
+# ユーザー情報をstreamlit_authenticatorの形式に変換
 credentials = {
     "usernames": {
         user["email"]: {
@@ -39,7 +48,7 @@ authenticator = stauth.Authenticate(
 name, authentication_status, username = authenticator.login(fields=None)
 
 if authentication_status:
-    # API キーの読み込み
+    # APIキーの読み込み
     api_key = os.environ.get("GENERATIVEAI_API_KEY")
     genai.configure(api_key=api_key)
 
@@ -89,17 +98,17 @@ if authentication_status:
         # ユーザーの入力をチャット履歴に追加  
         st.session_state["chat_history"].append({"role": "user", "content": prompt})
 
-        # Gemini Pro にメッセージ送信 (ストリーミング)
+        # Gemini Proにメッセージ送信 (ストリーミング)
         try:
             response = st.session_state["chat_session"].send_message(
                 prompt, stream=True, safety_settings=safety_settings
             )
             
-            # タイムアウト設定 (55秒)
+            # タイムアウト設定 (45秒)
             start_time = time.time()
             timeout = 45
             
-            # Gemini Pro のレスポンスを表示 (ストリーミング) 
+            # Gemini Proのレスポンスを表示 (ストリーミング) 
             with st.chat_message("assistant"):
                 response_text_placeholder = st.empty()
                 full_response_text = ""
@@ -134,7 +143,7 @@ if authentication_status:
                 )
                 
             # 前回のレスポンスのイテレーションが完了していない場合、巻き戻す
-            last_send, last_received = st.session_state["chat_session"].rewind()
+            st.session_state["chat_session"].rewind()
 
         except Exception as e:
             # エラー発生時、ユーザーフレンドリーなメッセージを追加
@@ -148,30 +157,21 @@ if authentication_status:
     authenticator.logout("Logout", "sidebar")
     
 elif authentication_status is False:
-    st.error('Username/password is incorrect')
+    st.error('パスワードが違います')
 elif authentication_status is None:
-    st.warning('Please enter your username and password')
+    st.warning('ユーザー名とパスワードを入力してください')
 
 if __name__ == "__main__":
     from streamlit.web.cli import main
-    from flask import Flask
 
-    app = Flask(__name__)
+    # Streamlitアプリケーションを実行する 
+    try:
+        main()
+    except SystemExit as e:
+        if e.code != 0:
+            pass  # エラー処理
+    except Exception as e:
+        # その他の例外が発生した場合のエラーハンドリング
+        error_details = traceback.format_exc()
+        st.error(f"エラー: {str(e)}\n\nエラー詳細:\n{error_details}")
 
-    @app.route("/")
-    def index():
-        # Streamlitアプリケーションを実行する 
-        try:
-            main()
-        except SystemExit as e:
-            if e.code != 0:
-                return "Error", 500
-        except Exception as e:
-            # その他の例外が発生した場合のエラーハンドリング
-            error_details = traceback.format_exc()
-            return f"Error: {str(e)}\n\nError Details:\n{error_details}", 500
-        # 正常終了時のレスポンスを返す
-        return "OK", 200
-
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)

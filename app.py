@@ -7,7 +7,6 @@ import google.ai.generativelanguage as glm
 from google.generativeai.types import generation_types
 import traceback
 import time
-from flask import Flask
 
 # ページ設定
 st.set_page_config(
@@ -66,6 +65,7 @@ if authentication_status:
 
     # セッション状態の初期化
     if "chat_session" not in st.session_state:
+        # モデル名を修正
         model = genai.GenerativeModel("gemini-exp-1121")
         st.session_state["chat_session"] = model.start_chat(
             history=[
@@ -103,45 +103,49 @@ if authentication_status:
             response = st.session_state["chat_session"].send_message(
                 prompt, stream=True, safety_settings=safety_settings
             )
-            
+
             # タイムアウト設定 (45秒)
             start_time = time.time()
             timeout = 45
-            
+
             # Gemini Proのレスポンスを表示 (ストリーミング) 
             with st.chat_message("assistant"):
                 response_text_placeholder = st.empty()
                 full_response_text = ""
-                
-                for chunk in response:
-                    if chunk.text:
-                        full_response_text += chunk.text
-                        response_text_placeholder.markdown(full_response_text)
-                    elif chunk.finish_reason == "safety_ratings":
-                        # 安全性チェックでブロックされた場合
-                        full_response_text += "現在アクセスが集中しております。しばらくしてから再度お試しください。"
-                        break
 
-                    # タイムアウトチェック 
+                for chunk in response:
+                    if hasattr(chunk, 'parts') and chunk.parts:
+                        for part in chunk.parts:
+                            full_response_text += part.text
+                            response_text_placeholder.markdown(full_response_text)
+                    elif chunk.finish_reason == "safety_censor":
+                        # 安全性チェックでブロックされた場合
+                        full_response_text += "申し訳ありませんが、このリクエストにはお応えできません。"
+                        break
+                    else:
+                        # 他の終了理由の処理
+                        pass
+
+                    # タイムアウトチェック
                     if time.time() - start_time > timeout:
                         response.resolve()
                         break  # ループを中断
-                
+
                 # 最終的なレスポンスを表示
                 response_text_placeholder.markdown(full_response_text)
-                
+
                 # チャット履歴にレスポンスを追加
                 st.session_state["chat_history"].append(
                     {"role": "assistant", "content": full_response_text}
                 )
-                
+
         except generation_types.BrokenResponseError as e:
             # ストリーミングレスポンスが中断された場合、最後のレスポンスを履歴に追加
-            if 'full_response_text' in locals():  
+            if 'full_response_text' in locals():
                 st.session_state["chat_history"].append(
                     {"role": "assistant", "content": full_response_text}
                 )
-                
+
             # 前回のレスポンスのイテレーションが完了していない場合、巻き戻す
             st.session_state["chat_session"].rewind()
 
@@ -155,7 +159,7 @@ if authentication_status:
             st.error(f"エラーが発生しました: {str(e)}\n\nエラー詳細:\n{error_details}")
 
     authenticator.logout("Logout", "sidebar")
-    
+
 elif authentication_status is False:
     st.error('パスワードが違います')
 elif authentication_status is None:
@@ -174,4 +178,3 @@ if __name__ == "__main__":
         # その他の例外が発生した場合のエラーハンドリング
         error_details = traceback.format_exc()
         st.error(f"エラー: {str(e)}\n\nエラー詳細:\n{error_details}")
-

@@ -53,7 +53,7 @@ if authentication_status:
 
     st.write(f'Welcome *{name}*')
 
-    st.title("🤖 Chat with Gemini 1.5Pro")
+    st.title("🤖 Chat with Gemini 2.5Pro")
 
     # 安全設定
     safety_settings = [
@@ -66,14 +66,14 @@ if authentication_status:
     # セッション状態の初期化
     if "chat_session" not in st.session_state:
         # モデル名を修正
-        model = genai.GenerativeModel("gemini-exp-1121")
+        model = genai.GenerativeModel("gemini-2.5-pro-preview-05-06")
         st.session_state["chat_session"] = model.start_chat(
             history=[
                 glm.Content(
                     role="user",
                     parts=[
                         glm.Part(
-                            text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。"
+                            text="あなたは優秀なAIアシスタントです。どのような話題も適切に詳細に答えます。時々偉人や哲学者の名言を日本語で引用してください。またプログラミングの天才でエンジニアです。"
                         )
                     ],
                 ),

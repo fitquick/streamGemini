@@ -10,7 +10,7 @@ import time
 
 # ページ設定
 st.set_page_config(
-    page_title="Chat with Gemini 1.5Pro",
+    page_title="Chat with Gemini 2.5Pro",
     page_icon="🤖",
     layout="wide",
 )
@@ -104,9 +104,9 @@ if authentication_status:
                 prompt, stream=True, safety_settings=safety_settings
             )
 
-            # タイムアウト設定 (45秒)
+            # タイムアウト設定 (90秒)
             start_time = time.time()
-            timeout = 45
+            timeout = 90
 
             # Gemini Proのレスポンスを表示 (ストリーミング) 
             with st.chat_message("assistant"):
